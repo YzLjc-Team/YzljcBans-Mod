@@ -5,9 +5,7 @@
   "refmap": "mixins.yzljcbans.refmap.json",
   "target": "@env(DEFAULT)",
   "compatibilityLevel": "JAVA_8",
-  "mixins": [
-    "MixinClientBrandRetriever"
-  ],
+  "mixins": [],
   "client": [],
   "injectors": {
     "defaultRequire": 1

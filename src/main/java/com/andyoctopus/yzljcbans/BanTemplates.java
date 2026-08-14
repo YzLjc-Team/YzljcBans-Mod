@@ -181,7 +181,7 @@ final class BanTemplates {
                 "&7Reason: &r&fBoosting your account to improve your stats.",
                 "&7Find out more: &b&nhttps://www.hypixel.net/appeal",
                 "&7",
-                "&7Ban ID: &f#banid%",
+                "&7Ban ID: &f#%banid%",
                 "&7Sharing your Ban ID may affect the processing of your appeal!"
         ));
 
@@ -190,6 +190,16 @@ final class BanTemplates {
                 "&7",
                 "&7Reason: &r&fUpon request, data for this user has been deleted.",
                 "&7Find out more: &b&nhttps://support.hypixel.net",
+                "&7",
+                "&7Ban ID: &f#%banid%",
+                "&7Sharing your Ban ID may affect the processing of your appeal!"
+        ));
+
+        register("sabotaging", "sabotaging", Arrays.asList(
+                "&cYou are temporarily banned for &f%DURATION% &cfrom this server!",
+                "&7",
+                "&7Reason: &r&fSabotaging the gameplay of other players on your team.",
+                "&7Find out more: &b&nhttps://www.hypixel.net/appeal",
                 "&7",
                 "&7Ban ID: &f#%banid%",
                 "&7Sharing your Ban ID may affect the processing of your appeal!"
