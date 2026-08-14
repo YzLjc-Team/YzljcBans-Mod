@@ -1,10 +1,11 @@
 buildscript {
     repositories {
-        //new forge repository
         maven { url "https://maven.minecraftforge.net" }
+        maven { url "https://repo.spongepowered.org/maven" }
     }
     dependencies {
         classpath "net.minecraftforge.gradle:ForgeGradle:2.1-SNAPSHOT"
+        classpath "org.spongepowered:mixingradle:0.6-SNAPSHOT"
     }
 }
 
@@ -14,19 +15,23 @@ plugins {
 }
 
 apply plugin: "net.minecraftforge.gradle.forge"
+apply plugin: "org.spongepowered.mixin"
 
 version = "1.0"
-group = "andyoctopus.com" //http://maven.apache.org/guides/mini/guide-naming-conventions.html
-archivesBaseName = "YZ_Ljc_Bans" //name of the output jar
+group = "andyoctopus.com"
+archivesBaseName = "YZ_Ljc_Bans"
 
-sourceCompatibility = targetCompatibility = 1.8 //using java 8
+sourceCompatibility = targetCompatibility = 1.8
 compileJava.options.encoding = "UTF-8"
 
 minecraft {
     version = "1.8.9-11.15.1.2318-1.8.9"
     runDir = "run"
-    mappings = "stable_22" //mappings for 1.8.9
-    makeObfSourceJar = false //disable creation of sources jar
+    mappings = "stable_22"
+    makeObfSourceJar = false
+
+    // 这里配置开发环境运行参数
+    clientRunArgs += ["--tweakClass=org.spongepowered.asm.launch.MixinTweaker", "--mixin=mixins.yzljcbans.json"]
 }
 
 configurations {
@@ -35,37 +40,35 @@ configurations {
 }
 
 repositories {
-    //repos for libraries (not gradle plugins)
-    //example:
-    //maven { url "https://repo.andyoctopus.com/" }
+    maven { url "https://repo.spongepowered.org/maven" }
 }
 
 dependencies {
-    //shade will bundle your library to the output jar
-    //your libraries will be accessible outside of intellij
-    //example:
-    //shade "com.andyoctopus:libSkyblock:1.1.1"
+    // 关键依赖：Mixin 库
+    shade("org.spongepowered:mixin:0.7.11-SNAPSHOT") {
+        exclude module: "launchwrapper"
+        exclude module: "guava"
+        exclude module: "gson"
+        exclude module: "commons-io"
+        exclude module: "log4j-core"
+    }
+}
 
-    //compile will make your library available only in this dev environment
-    //your libraries wont be accessible outside of intellij
-    //example:
-    //compile "com.andyoctopus:libSkyblock:1.1.1"
+// [关键修改] Mixin 0.6 版本的正确配置写法
+mixin {
+    // 语法：add sourceSets.main, "你的refmap文件名"
+    add sourceSets.main, "mixins.yzljcbans.refmap.json"
 }
 
 processResources {
-    //this will ensure that this task is redone when the versions change.
     inputs.property "version", project.version
     inputs.property "mcversion", project.minecraft.version
 
-    //replace stuff in mcmod.info, nothing else
     from(sourceSets.main.resources.srcDirs) {
         include "mcmod.info"
-
-        //replace version and mcversion
         expand "version":project.version, "mcversion":project.minecraft.version
     }
 
-    //copy everything else, that"s not the mcmod.info
     from(sourceSets.main.resources.srcDirs) {
         exclude "mcmod.info"
     }
@@ -75,15 +78,25 @@ processResources {
 
 shadowJar {
     dependencies {
-        //we remove gson because it belongs to the public api and will break shading
-        //exclude(dependency("com.google.code.gson:gson:2.8.6"))
+        // 通常不需要 exclude，除非有冲突
     }
     configurations = [project.configurations.shade]
-    duplicatesStrategy DuplicatesStrategy.EXCLUDE //prevent duplicates
-    classifier "" //prevent creation of unshadowed jar
+    duplicatesStrategy DuplicatesStrategy.EXCLUDE
+    classifier ""
+}
+
+jar {
+    manifest {
+        attributes(
+                "ForceLoadAsMod": "true",
+                "MixinConfigs": "mixins.yzljcbans.json",
+                "TweakClass": "org.spongepowered.asm.launch.MixinTweaker",
+                "TweakOrder": "0",
+                "ModSide": "CLIENT"
+        )
+    }
 }
 
 reobf {
-    //reobfuscate the shadowed jar
     shadowJar {}
 }

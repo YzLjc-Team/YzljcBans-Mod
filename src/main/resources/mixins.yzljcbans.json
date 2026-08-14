@@ -1,0 +1,15 @@
+{
+  "required": true,
+  "minVersion": "0.7.11",
+  "package": "com.andyoctopus.yzljcbans.mixin",
+  "refmap": "mixins.yzljcbans.refmap.json",
+  "target": "@env(DEFAULT)",
+  "compatibilityLevel": "JAVA_8",
+  "mixins": [
+    "MixinClientBrandRetriever"
+  ],
+  "client": [],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}
