@@ -64,6 +64,7 @@ public class BanSequenceManager {
 
     private void sendLimboCommand(EntityPlayerSP player) {
         player.sendChatMessage("/limbo");
+        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "An exception occurred in your connection, so you have been routed to limbo!"));
 //        player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "[YzljcBans] Sending /limbo..."));
     }
 
