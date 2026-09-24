@@ -41,7 +41,7 @@ public class GetBanCommand extends CommandBase {
 
     @Override
     public String getCommandUsage(ICommandSender sender) {
-        return "/gb <template> <duration|permanent> <limboDelay> [Reason/PlayerName]";
+        return "/gb config | /gb <template> <duration|permanent> <limboDelay> [Reason/PlayerName]";
     }
 
     @Override
@@ -49,6 +49,11 @@ public class GetBanCommand extends CommandBase {
         EntityPlayerSP player = Minecraft.getMinecraft().thePlayer;
         if (player == null) {
             throw new CommandException("You must be in-game to use this command.");
+        }
+
+        if (args.length == 1 && "config".equalsIgnoreCase(args[0])) {
+            sequenceManager.openSettings();
+            return;
         }
 
         if (args.length < 3) {
@@ -100,7 +105,9 @@ public class GetBanCommand extends CommandBase {
     @Override
     public List<String> addTabCompletionOptions(ICommandSender sender, String[] args, BlockPos pos) {
         if (args.length == 1) {
-            return getListOfStringsMatchingLastWord(args, BanTemplates.getKeys());
+            List<String> keys = new java.util.ArrayList<>(BanTemplates.getKeys());
+            keys.add("config");
+            return getListOfStringsMatchingLastWord(args, keys);
         }
         return Collections.emptyList();
     }

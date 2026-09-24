@@ -21,6 +21,11 @@ public class BanSequenceManager {
     private static final long POST_LIMBO_DISCONNECT_DELAY_MS = 3000L;
 
     private ActiveBanSequence activeSequence;
+    private boolean openSettingsRequested;
+
+    public void openSettings() {
+        openSettingsRequested = true;
+    }
 
     public void startSequence(List<String> messageLines, long limboDelayMillis) {
         long now = System.currentTimeMillis();
@@ -34,11 +39,16 @@ public class BanSequenceManager {
             return;
         }
 
+        Minecraft mc = Minecraft.getMinecraft();
+        if (openSettingsRequested) {
+            openSettingsRequested = false;
+            mc.displayGuiScreen(new GuiBanSettings(null));
+        }
+
         if (activeSequence == null) {
             return;
         }
 
-        Minecraft mc = Minecraft.getMinecraft();
         if (mc.thePlayer == null || mc.theWorld == null) {
             // Player may have disconnected manually; clean up to avoid stale tasks.
             activeSequence = null;
@@ -65,7 +75,8 @@ public class BanSequenceManager {
     private void sendLimboCommand(EntityPlayerSP player) {
         player.sendChatMessage("/limbo");
         player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "An exception occurred in your connection, so you have been routed to limbo!"));
-//        player.addChatMessage(new ChatComponentText(EnumChatFormatting.GRAY + "[YzljcBans] Sending /limbo..."));
+        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "You were spawned in Limbo."));
+        player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/limbo for more information."));
     }
 
     private void showBanScreen(ActiveBanSequence sequence) {

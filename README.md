@@ -13,12 +13,18 @@ YzljcBans 是一个针对 Minecraft 1.8.9 Forge 客户端开发的模组，用�
 
 ```
 /gb <模板> <时长/永久> <进入limbo延迟> [附加理由...]
+/gb config
 ```
 
 - `<模板>`：使用 `Tab` 可查看所有可用模板键，例如 `cheating`、`chatban`、`security` 等。
 - `<时长/永久>`：支持 `30d12h5m30s` 这类复合写法；若模板不需要 `%DURATION%` 会原样显示。输入 `permanent`/`perm`/`forever` 表示永久封禁。
 - `<进入limbo延迟>`：格式同上，表示从执行指令到发送 `/limbo` 的等待时间。
 - `[附加理由...]`：可选参数，若模板包含 `%REASON%` 会使用提供的文本；未提供时默认填入 Ban ID。
+- `/gb config`：打开模板设置页，选择当前装载的模板查看封禁画面预览，或点击 `New Template` 新增自定义模板。
+
+### 新增模板
+
+在设置页填写唯一的英文键名、显示名称和封禁提示文本。点击 `+ Line` 添加文字行；可选中行编辑、调整顺序或删除。模板文本支持下方列出的占位符和 `&c`、`&f` 等 Minecraft 颜色代码。保存后即可使用 `/gb <键名> <时长> <进入limbo延迟>`，配置存放于游戏目录的 `config/yzljcbans/custom_bans.json`，重启后仍会加载。
 
 ### 示例
 
@@ -51,7 +57,7 @@ YzljcBans 是一个针对 Minecraft 1.8.9 Forge 客户端开发的模组，用�
 
 - 模组只在客户端生效，不会影响服务器端数据。
 - 部分模板包含其他语言文本（中/日文等），显示时需使用支持对应字符集的字体。
-- 若要扩展模板，可编辑 `src/main/java/com/andyoctopus/yzljcbans/BanTemplates.java`，按照现有格式追加新的 `register` 调用即可。
+- 可通过 `/gb config` 新增模板；开发者也可编辑 `src/main/java/com/andyoctopus/yzljcbans/BanTemplates.java` 添加内置模板。
 - 非 **Hypixel** 服务器的封禁界面有可能不准确！
 
 祝你使用愉快！如需更多封禁样式，可继续补充模板或自定义界面逻辑。

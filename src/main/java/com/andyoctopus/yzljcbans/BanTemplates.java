@@ -1,9 +1,25 @@
 package com.andyoctopus.yzljcbans;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import net.minecraft.client.Minecraft;
+
+import java.io.File;
+import java.io.IOException;
+import java.io.Reader;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
 import java.util.*;
 
 final class BanTemplates {
-    private static final Map<String, BanTemplate> TEMPLATES = new HashMap<>();
+    private static final Map<String, BanTemplate> TEMPLATES = new LinkedHashMap<>();
+    private static final Map<String, CustomTemplate> CUSTOM_TEMPLATES = new LinkedHashMap<>();
+    private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+    private static boolean customTemplatesLoaded;
+    private static IOException loadError;
 
     static {
         register("cheating", "Cheating", Arrays.asList(
@@ -212,13 +228,123 @@ final class BanTemplates {
     }
 
     static BanTemplate get(String key) {
-        return TEMPLATES.get(key.toLowerCase(Locale.ROOT));
+        loadCustomTemplates();
+        String normalizedKey = key.toLowerCase(Locale.ROOT);
+        CustomTemplate custom = CUSTOM_TEMPLATES.get(normalizedKey);
+        return custom == null ? TEMPLATES.get(normalizedKey) : new BanTemplate(custom.name, custom.lines);
     }
 
     static List<String> getKeys() {
+        loadCustomTemplates();
         List<String> keys = new ArrayList<>(TEMPLATES.keySet());
+        keys.addAll(CUSTOM_TEMPLATES.keySet());
         Collections.sort(keys);
         return keys;
+    }
+
+    static boolean isCustom(String key) {
+        loadCustomTemplates();
+        return CUSTOM_TEMPLATES.containsKey(key.toLowerCase(Locale.ROOT));
+    }
+
+    static String getLoadError() {
+        loadCustomTemplates();
+        return loadError == null ? null : loadError.getMessage();
+    }
+
+    static void addCustom(String key, String name, List<String> lines) throws IOException {
+        loadCustomTemplates();
+        if (loadError != null) {
+            throw new IOException("Cannot read custom templates: " + loadError.getMessage(), loadError);
+        }
+
+        String normalizedKey = key.trim().toLowerCase(Locale.ROOT);
+        String normalizedName = name.trim();
+        if (!normalizedKey.matches("[a-z0-9_]{1,32}")) {
+            throw new IllegalArgumentException("Key must be 1-32 letters, numbers or underscores.");
+        }
+        if (TEMPLATES.containsKey(normalizedKey) || CUSTOM_TEMPLATES.containsKey(normalizedKey)) {
+            throw new IllegalArgumentException("A template with this key already exists.");
+        }
+        if (normalizedName.isEmpty() || normalizedName.length() > 40) {
+            throw new IllegalArgumentException("Name must be 1-40 characters.");
+        }
+        if (lines.isEmpty() || lines.size() > 30) {
+            throw new IllegalArgumentException("Add between 1 and 30 message lines.");
+        }
+        List<String> copy = new ArrayList<>(lines);
+        boolean hasText = false;
+        for (String line : copy) {
+            if (line == null || line.length() > 256) {
+                throw new IllegalArgumentException("Each message line must be at most 256 characters.");
+            }
+            hasText |= !line.trim().isEmpty();
+        }
+        if (!hasText) {
+            throw new IllegalArgumentException("Enter at least one non-empty message line.");
+        }
+
+        CustomTemplate template = new CustomTemplate(normalizedKey, normalizedName, copy);
+        List<CustomTemplate> updated = new ArrayList<>(CUSTOM_TEMPLATES.values());
+        updated.add(template);
+        File file = customFile();
+        Files.createDirectories(file.getParentFile().toPath());
+        Path temporaryFile = file.toPath().resolveSibling(file.getName() + ".tmp");
+        try (Writer writer = Files.newBufferedWriter(temporaryFile, StandardCharsets.UTF_8)) {
+            GSON.toJson(updated, writer);
+        }
+        Files.move(temporaryFile, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
+        CUSTOM_TEMPLATES.put(normalizedKey, template);
+    }
+
+    private static void loadCustomTemplates() {
+        if (customTemplatesLoaded) {
+            return;
+        }
+        customTemplatesLoaded = true;
+        File file = customFile();
+        if (!file.isFile()) {
+            return;
+        }
+        try (Reader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
+            CustomTemplate[] templates = GSON.fromJson(reader, CustomTemplate[].class);
+            if (templates == null) {
+                throw new IOException("Custom template file is empty.");
+            }
+            for (CustomTemplate template : templates) {
+                if (template == null || template.key == null || template.name == null || template.lines == null
+                        || !template.key.matches("[a-z0-9_]{1,32}") || template.name.trim().isEmpty()
+                        || template.name.length() > 40 || template.lines.isEmpty() || template.lines.size() > 30
+                        || TEMPLATES.containsKey(template.key) || CUSTOM_TEMPLATES.containsKey(template.key)) {
+                    throw new IOException("Custom template file contains an invalid entry.");
+                }
+                for (String line : template.lines) {
+                    if (line == null || line.length() > 256) {
+                        throw new IOException("Custom template file contains an invalid message line.");
+                    }
+                }
+                CUSTOM_TEMPLATES.put(template.key, template);
+            }
+        } catch (Exception error) {
+            CUSTOM_TEMPLATES.clear();
+            loadError = error instanceof IOException ? (IOException) error : new IOException(error);
+        }
+    }
+
+    private static File customFile() {
+        return new File(Minecraft.getMinecraft().mcDataDir, "config/yzljcbans/custom_bans.json");
+    }
+
+    private static final class CustomTemplate {
+        private final String key;
+        private final String name;
+        private final List<String> lines;
+
+        private CustomTemplate(String key, String name, List<String> lines) {
+            this.key = key;
+            this.name = name;
+            this.lines = lines;
+        }
     }
 
     private BanTemplates() {
