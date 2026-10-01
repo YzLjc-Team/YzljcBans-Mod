@@ -75,8 +75,8 @@ public class BanSequenceManager {
     private void sendLimboCommand(EntityPlayerSP player) {
         player.sendChatMessage("/limbo");
         player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "An exception occurred in your connection, so you have been routed to limbo!"));
-        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "You were spawned in Limbo."));
-        player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/limbo for more information."));
+//        player.addChatMessage(new ChatComponentText(EnumChatFormatting.RED + "You were spawned in Limbo."));
+//        player.addChatMessage(new ChatComponentText(EnumChatFormatting.AQUA + "/limbo for more information."));
     }
 
     private void showBanScreen(ActiveBanSequence sequence) {

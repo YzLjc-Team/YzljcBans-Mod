@@ -6,7 +6,10 @@
   "target": "@env(DEFAULT)",
   "compatibilityLevel": "JAVA_8",
   "mixins": [],
-  "client": [],
+  "client": [
+    "MixinEntityPlayer",
+    "MixinGuiPlayerTabOverlay"
+  ],
   "injectors": {
     "defaultRequire": 1
   }
